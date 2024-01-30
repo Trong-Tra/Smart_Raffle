@@ -10,13 +10,13 @@ pragma solidity ^0.8.7;
 
 import "@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
-import "@chainlink/contracts/src/v0.8/automation/AutomationCompatible.sol";
+import "@chainlink/contracts/src/v0.8/automation/interfaces/AutomationCompatibleInterface.sol";
 
 error Raffle__NotEnoughETHEntered();
 error Raffle__TransferFailed();
 error Raffle__NotOpen();
 
-contract Raffle is VRFConsumerBaseV2, AutomationCompatible {
+contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
     /* Type declarations */
     enum RaffleState {
         OPEN,
@@ -84,8 +84,8 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatible {
      */
 
     function checkUpkeep(
-        bytes calldata /* check Data */
-    ) external override returns (bool upkeepNeeded, bytes memory /* perform Data */) {
+        bytes memory /* check Data */
+    ) public view override returns (bool upkeepNeeded, bytes memory /* perform Data */) {
         bool isOpen = (RaffleState.OPEN == s_raffleState);
         bool timePassed = ((block.timestamp - s_lastTimeStamp) > s_interval);
         bool hasPlayers = (s_players.length > 0);
