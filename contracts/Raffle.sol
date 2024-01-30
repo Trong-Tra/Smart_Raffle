@@ -26,6 +26,7 @@ contract Raffle is VRFConsumerBaseV2 {
 
     /* Events */
     event RaffleEnter(address indexed player);
+    event RequestedRaffleWinner(uint256 indexed requestId);
 
     constructor(
         address vrfCoordinatorV2,
@@ -50,13 +51,14 @@ contract Raffle is VRFConsumerBaseV2 {
     }
 
     function requestRandomWinner() external {
-        i_vrfCoordinatior.requestRandomWords(
+        uint256 requestId = i_vrfCoordinatior.requestRandomWords(
             i_gasLane,
             i_subscriptionId,
             REQUEST_CONFIRMATIONS,
             i_callbackGasLimit,
             NUM_WORDS
         );
+        emit RequestedRaffleWinner(requestId);
     }
 
     function fulfillRandomWords(
