@@ -10,11 +10,19 @@ pragma solidity ^0.8.7;
 
 import "@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
+import "@chainlink/contracts/src/v0.8/automation/AutomationCompatible.sol";
 
 error Raffle__NotEnoughETHEntered();
 error Raffle__TransferFailed();
+error Raffle__NotOpen();
 
-contract Raffle is VRFConsumerBaseV2 {
+contract Raffle is VRFConsumerBaseV2, AutomationCompatible {
+    /* Type declarations */
+    enum RaffleState {
+        OPEN,
+        CALCULATING
+    }
+
     /* State Variables*/
     uint256 private immutable i_entranceFee;
     address payable[] private s_players;
@@ -27,6 +35,7 @@ contract Raffle is VRFConsumerBaseV2 {
 
     /* Lottery Variables */
     address private s_recentWinner;
+    RaffleState private s_raffleState;
 
     /* Events */
     event RaffleEnter(address indexed player);
@@ -45,15 +54,31 @@ contract Raffle is VRFConsumerBaseV2 {
         i_gasLane = gasLane;
         i_subscriptionId = subscriptionId;
         i_callbackGasLimit = callbackGasLimit;
+        s_raffleState = RaffleState.OPEN;
     }
 
     function enterRaffle() public payable {
         if (msg.value < i_entranceFee) {
             revert Raffle__NotEnoughETHEntered();
         }
+        if (s_raffleState != RaffleState.OPEN) {
+            revert Raffle__NotOpen();
+        }
         s_players.push(payable(msg.sender));
         emit RaffleEnter(msg.sender);
     }
+
+    /**
+     * @dev This is the function that the Chainlink Keeper nodes call
+     * they look for the `upkeepNeeded` to return true
+     * the following should be true in order to return true
+     * 1. Our time interval should have passes
+     * 2. The lottery should have at least 1 player, and have some ETH
+     * 3. Our subscription is funded with LINK
+     * 4. The lottery should be in an "open" state
+     */
+
+    function checkUpkeep(bytes calldata /* checkData */) external override {}
 
     function requestRandomWinner() external {
         uint256 requestId = i_vrfCoordinatior.requestRandomWords(
