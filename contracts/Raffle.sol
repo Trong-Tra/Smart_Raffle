@@ -84,8 +84,8 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
      */
 
     function checkUpkeep(
-        bytes memory /* check Data */
-    ) public view override returns (bool upkeepNeeded, bytes memory /* perform Data */) {
+        bytes memory /* checkData */
+    ) public view override returns (bool upkeepNeeded, bytes memory /* performData */) {
         bool isOpen = (RaffleState.OPEN == s_raffleState);
         bool timePassed = ((block.timestamp - s_lastTimeStamp) > s_interval);
         bool hasPlayers = (s_players.length > 0);
@@ -93,7 +93,8 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
         upkeepNeeded = (isOpen && timePassed && hasPlayers && hasBalance);
     }
 
-    function requestRandomWinner() external {
+    function performUpkeep(bytes calldata /* performData */) external override {
+        (bool upkeepNeeded, ) = checkUpkeep("");
         s_raffleState = RaffleState.CALCULATING;
         uint256 requestId = i_vrfCoordinatior.requestRandomWords(
             i_gasLane,
