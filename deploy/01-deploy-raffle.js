@@ -14,10 +14,12 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
         vrfCoordinatorV2Address = networkConfig[chainId]["vrfCoordinatorV2"]
     }
 
-    const args = []
+    const entranceFee = networkConfig[chainId]["entranceFee"]
+    const gasLane = networkConfig[chainId]["gasLane"]
+    const args = [vrfCoordinatorV2Address, entranceFee, gasLane]
     const raffle = await deploy("Raffle", {
         from: deployer,
-        args: [],
+        args: args,
         log: true,
         waitConfirmations: network.config.blockConfirmations || 1,
     })
